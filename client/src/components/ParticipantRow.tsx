@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Sword, Wand2, Scroll, ChevronDown, ChevronUp, Plus, Edit, Zap, Shield, Skull, HeartPulse, Settings } from "lucide-react";
+import { Trash2, Sword, Wand as Wand2, Scroll, ChevronDown, ChevronUp, Plus, CreditCard as Edit, Zap, Shield, Skull, HeartPulse, Settings } from "lucide-react";
 import type { Participant, Action } from "@shared/schema";
 import HPBar from "./HPBar";
 import MPBar from "./MPBar";

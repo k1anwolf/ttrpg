@@ -1,4 +1,4 @@
-import { Circle, CheckCircle2, XCircle } from "lucide-react";
+import { Circle, CircleCheck as CheckCircle2, Circle as XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { DeathSaves as DeathSavesType } from "@shared/schema";
 
