@@ -31,9 +31,13 @@ export default function CombatDashboard() {
         const state: CombatState = JSON.parse(savedData);
         const migratedParticipants = state.participants.map(p => ({
           ...p,
-          attacks: p.attacks.map(a => ({ ...a, effects: a.effects || [] })),
-          abilities: p.abilities.map(a => ({ ...a, effects: a.effects || [] })),
-          spells: p.spells.map(a => ({ ...a, effects: a.effects || [] })),
+          characterType: p.characterType || p.faction,
+          damageTaken: p.damageTaken || 0,
+          equipment: p.equipment || [],
+          attacks: p.attacks.map(a => ({ ...a, effects: a.effects || [], targetCount: a.targetCount || 1, canRemoveStatus: a.canRemoveStatus || false })),
+          abilities: p.abilities.map(a => ({ ...a, effects: a.effects || [], targetCount: a.targetCount || 1, canRemoveStatus: a.canRemoveStatus || false })),
+          spells: p.spells.map(a => ({ ...a, effects: a.effects || [], targetCount: a.targetCount || 1, canRemoveStatus: a.canRemoveStatus || false })),
+          statuses: p.statuses.map(s => ({ ...s, source: s.source || 'manual' })),
         }));
         setParticipants(migratedParticipants);
         setCurrentTurnIndex(state.currentTurnIndex);
@@ -74,18 +78,21 @@ export default function CombatDashboard() {
         id: '1',
         name: 'Арагорн',
         initiative: 18,
+        characterType: 'player',
         faction: 'player',
         hpMax: 100,
         hpCurr: 80,
+        damageTaken: 0,
         mpMax: 50,
         mpCurr: 30,
         ac: 16,
         skills: ['Скрытность', 'Атлетика'],
         characteristics: { strength: 16, dexterity: 14, constitution: 15, intelligence: 10, wisdom: 12, charisma: 14 },
-        attacks: [{ id: 'a1', name: 'Удар мечом', type: 'attack', cooldown: 0, currentCooldown: 0, effects: [{ id: 'e1', type: 'damage', value: 15 }] }],
-        abilities: [{ id: 'ab1', name: 'Второе дыхание', type: 'ability', cooldown: 3, currentCooldown: 0, effects: [{ id: 'e2', type: 'heal', value: 20 }] }],
+        attacks: [{ id: 'a1', name: 'Удар мечом', type: 'attack', cooldown: 0, currentCooldown: 0, targetCount: 1, canRemoveStatus: false, effects: [{ id: 'e1', type: 'damage', value: 15 }] }],
+        abilities: [{ id: 'ab1', name: 'Второе дыхание', type: 'ability', cooldown: 3, currentCooldown: 0, targetCount: 1, canRemoveStatus: false, effects: [{ id: 'e2', type: 'heal', value: 20 }] }],
         spells: [],
         statuses: [],
+        equipment: [],
         isDead: false,
         isUnconscious: false,
       },
@@ -93,21 +100,24 @@ export default function CombatDashboard() {
         id: '2',
         name: 'Гэндальф',
         initiative: 15,
+        characterType: 'player',
         faction: 'player',
         hpMax: 80,
         hpCurr: 70,
+        damageTaken: 0,
         mpMax: 100,
         mpCurr: 60,
         ac: 14,
         skills: ['Магия', 'История'],
         characteristics: { strength: 10, dexterity: 12, constitution: 14, intelligence: 18, wisdom: 16, charisma: 15 },
         attacks: [],
-        abilities: [{ id: 'ab2', name: 'Посох света', type: 'ability', cooldown: 0, currentCooldown: 0, effects: [{ id: 'e3', type: 'damage', value: 10 }] }],
+        abilities: [{ id: 'ab2', name: 'Посох света', type: 'ability', cooldown: 0, currentCooldown: 0, targetCount: 1, canRemoveStatus: false, effects: [{ id: 'e3', type: 'damage', value: 10 }] }],
         spells: [
-          { id: 's1', name: 'Огненный шар', type: 'spell', cooldown: 0, currentCooldown: 0, effects: [{ id: 'e4', type: 'damage', value: 30 }, { id: 'e5', type: 'addStatus', statusName: 'Горение', statusDuration: 2, statusDurationType: 'rounds' }] },
-          { id: 's2', name: 'Щит', type: 'spell', cooldown: 0, currentCooldown: 0, effects: [{ id: 'e6', type: 'addStatus', statusName: 'Защита', statusDuration: 3, statusDurationType: 'rounds' }] },
+          { id: 's1', name: 'Огненный шар', type: 'spell', cooldown: 0, currentCooldown: 0, targetCount: -1, canRemoveStatus: false, effects: [{ id: 'e4', type: 'damage', value: 30 }, { id: 'e5', type: 'addStatus', statusName: 'Горение', statusDuration: 2, statusDurationType: 'rounds' }] },
+          { id: 's2', name: 'Щит', type: 'spell', cooldown: 0, currentCooldown: 0, targetCount: 1, canRemoveStatus: false, effects: [{ id: 'e6', type: 'addStatus', statusName: 'Защита', statusDuration: 3, statusDurationType: 'rounds' }] },
         ],
         statuses: [],
+        equipment: [],
         isDead: false,
         isUnconscious: false,
       },
@@ -115,18 +125,21 @@ export default function CombatDashboard() {
         id: '3',
         name: 'Орк-воин',
         initiative: 12,
+        characterType: 'npc',
         faction: 'npc',
         hpMax: 60,
         hpCurr: 35,
+        damageTaken: 0,
         mpMax: 0,
         mpCurr: 0,
         ac: 13,
         skills: [],
         characteristics: { strength: 14, dexterity: 10, constitution: 16, intelligence: 8, wisdom: 8, charisma: 6 },
-        attacks: [{ id: 'a2', name: 'Секира', type: 'attack', cooldown: 0, currentCooldown: 0, effects: [{ id: 'e7', type: 'damage', value: 12 }] }],
+        attacks: [{ id: 'a2', name: 'Секира', type: 'attack', cooldown: 0, currentCooldown: 0, targetCount: 1, canRemoveStatus: false, effects: [{ id: 'e7', type: 'damage', value: 12 }] }],
         abilities: [],
         spells: [],
-        statuses: [{ id: 'st1', name: 'Раненый', duration: 2, durationType: 'rounds' }],
+        statuses: [{ id: 'st1', name: 'Раненый', duration: 2, durationType: 'rounds', source: 'manual' }],
+        equipment: [],
         isDead: false,
         isUnconscious: false,
       },
@@ -134,21 +147,24 @@ export default function CombatDashboard() {
         id: '4',
         name: 'Балрог',
         initiative: 20,
+        characterType: 'boss',
         faction: 'boss',
-        hpMax: 300,
-        hpCurr: 250,
+        hpMax: null,
+        hpCurr: null,
+        damageTaken: 50,
         mpMax: 150,
         mpCurr: 100,
         ac: 20,
         skills: [],
         characteristics: { strength: 20, dexterity: 12, constitution: 20, intelligence: 16, wisdom: 14, charisma: 18 },
         attacks: [
-          { id: 'a3', name: 'Огненный кнут', type: 'attack', cooldown: 0, currentCooldown: 0, effects: [{ id: 'e8', type: 'damage', value: 25 }] },
-          { id: 'a4', name: 'Пламенный меч', type: 'attack', cooldown: 0, currentCooldown: 0, effects: [{ id: 'e9', type: 'damage', value: 35 }] },
+          { id: 'a3', name: 'Огненный кнут', type: 'attack', cooldown: 0, currentCooldown: 0, targetCount: 1, canRemoveStatus: false, effects: [{ id: 'e8', type: 'damage', value: 25 }] },
+          { id: 'a4', name: 'Пламенный меч', type: 'attack', cooldown: 0, currentCooldown: 0, targetCount: 1, canRemoveStatus: false, effects: [{ id: 'e9', type: 'damage', value: 35 }] },
         ],
-        abilities: [{ id: 'ab3', name: 'Ужас', type: 'ability', cooldown: 3, currentCooldown: 0, effects: [{ id: 'e10', type: 'addStatus', statusName: 'Напуган', statusDuration: 2, statusDurationType: 'rounds' }] }],
+        abilities: [{ id: 'ab3', name: 'Ужас', type: 'ability', cooldown: 3, currentCooldown: 0, targetCount: -1, canRemoveStatus: false, effects: [{ id: 'e10', type: 'addStatus', statusName: 'Напуган', statusDuration: 2, statusDurationType: 'rounds' }] }],
         spells: [],
         statuses: [],
+        equipment: [],
         isDead: false,
         isUnconscious: false,
       },
@@ -173,19 +189,50 @@ export default function CombatDashboard() {
   const handleNextTurn = () => {
     const newIndex = (currentTurnIndex + 1) % sortedParticipants.length;
     setCurrentTurnIndex(newIndex);
-    
+
     if (newIndex === 0) {
       setCurrentRound((prev) => prev + 1);
       addEvent(`Начало раунда ${currentRound + 1}`, 'round');
-      
+
       setParticipants((prev) => prev.map(p => ({
         ...p,
-        statuses: p.statuses.map(s => 
-          s.durationType === 'rounds' && s.duration > 0
-            ? { ...s, duration: s.duration - 1 }
-            : s
-        ).filter(s => s.duration > 0),
+        statuses: p.statuses
+          .map(s =>
+            s.durationType === 'rounds' && s.duration > 0
+              ? { ...s, duration: s.duration - 1 }
+              : s
+          )
+          .filter(s => s.durationType === 'until_removed' || s.duration > 0),
+        attacks: p.attacks.map(a => ({
+          ...a,
+          currentCooldown: Math.max(0, a.currentCooldown - 1),
+        })),
+        abilities: p.abilities.map(a => ({
+          ...a,
+          currentCooldown: Math.max(0, a.currentCooldown - 1),
+        })),
+        spells: p.spells.map(a => ({
+          ...a,
+          currentCooldown: Math.max(0, a.currentCooldown - 1),
+        })),
       })));
+    } else {
+      setParticipants((prev) => prev.map(p => {
+        const isCurrent = p.id === sortedParticipants[newIndex].id;
+        if (isCurrent) {
+          return {
+            ...p,
+            statuses: p.statuses
+              .map(s =>
+                s.durationType === 'turns' && s.duration > 0
+                  ? { ...s, duration: s.duration - 1 }
+                  : s
+              )
+              .filter(s => s.durationType === 'until_removed' || s.duration > 0),
+          };
+        }
+        return p;
+      }));
     }
 
     const currentParticipant = sortedParticipants[newIndex];
@@ -203,35 +250,63 @@ export default function CombatDashboard() {
   };
 
   const handleResetCombat = () => {
-    if (confirm('Вы уверены, что хотите сбросить бой?')) {
+    if (confirm('Сбросить раунды и ходы? Все временные эффекты будут сняты.')) {
       setCurrentTurnIndex(0);
       setCurrentRound(1);
-      addEvent('Бой сброшен', 'round');
+
+      setParticipants((prev) =>
+        prev.map((p) => ({
+          ...p,
+          statuses: p.statuses.filter(s => s.durationType === 'until_removed'),
+          attacks: p.attacks.map(a => ({ ...a, currentCooldown: 0 })),
+          abilities: p.abilities.map(a => ({ ...a, currentCooldown: 0 })),
+          spells: p.spells.map(a => ({ ...a, currentCooldown: 0 })),
+        }))
+      );
+
+      addEvent('Бой сброшен - все временные эффекты сняты', 'round');
     }
   };
 
   const handleShortRest = () => {
     setParticipants((prev) =>
-      prev.map((p) => ({
-        ...p,
-        hpCurr: Math.min(p.hpMax, p.hpCurr + Math.floor(p.hpMax * (restSettings.shortRest.hpPercent / 100))),
-        mpCurr: Math.min(p.mpMax, p.mpCurr + Math.floor(p.mpMax * (restSettings.shortRest.mpPercent / 100))),
-      }))
+      prev.map((p) => {
+        if (p.characterType === 'boss' || !p.hpMax) {
+          return {
+            ...p,
+            mpCurr: Math.min(p.mpMax, p.mpCurr + Math.floor(p.mpMax * (restSettings.shortRest.mpPercent / 100))),
+          };
+        }
+        return {
+          ...p,
+          hpCurr: Math.min(p.hpMax, (p.hpCurr || 0) + Math.floor(p.hpMax * (restSettings.shortRest.hpPercent / 100))),
+          mpCurr: Math.min(p.mpMax, p.mpCurr + Math.floor(p.mpMax * (restSettings.shortRest.mpPercent / 100))),
+        };
+      })
     );
     addEvent('Короткий отдых завершён', 'rest');
   };
 
   const handleLongRest = () => {
     setParticipants((prev) =>
-      prev.map((p) => ({
-        ...p,
-        hpCurr: Math.floor(p.hpMax * (restSettings.longRest.hpPercent / 100)),
-        mpCurr: Math.floor(p.mpMax * (restSettings.longRest.mpPercent / 100)),
-        statuses: [],
-        isDead: false,
-        isUnconscious: false,
-        deathSaves: undefined,
-      }))
+      prev.map((p) => {
+        if (p.characterType === 'boss') {
+          return {
+            ...p,
+            mpCurr: Math.floor(p.mpMax * (restSettings.longRest.mpPercent / 100)),
+            statuses: p.statuses.filter(s => s.durationType === 'until_removed'),
+          };
+        }
+        return {
+          ...p,
+          hpCurr: p.hpMax ? Math.floor(p.hpMax * (restSettings.longRest.hpPercent / 100)) : 0,
+          mpCurr: Math.floor(p.mpMax * (restSettings.longRest.mpPercent / 100)),
+          statuses: p.statuses.filter(s => s.durationType === 'until_removed'),
+          isDead: false,
+          isUnconscious: false,
+          deathSaves: undefined,
+        };
+      })
     );
     addEvent('Длинный отдых завершён', 'rest');
   };
@@ -259,18 +334,33 @@ export default function CombatDashboard() {
     setParticipants((prev) =>
       prev.map((p) => {
         if (p.id === participantId) {
-          const newHp = Math.max(0, p.hpCurr - amount);
           const participant = participants.find((pp) => pp.id === participantId);
+
+          if (p.characterType === 'boss') {
+            const newDamage = p.damageTaken + amount;
+            if (participant) {
+              addEvent(`${participant.name} получает ${amount} урона (всего: ${newDamage})`, 'damage');
+            }
+            return { ...p, damageTaken: newDamage };
+          }
+
+          const newHp = Math.max(0, (p.hpCurr || 0) - amount);
           if (participant) {
             addEvent(`${participant.name} получает ${amount} урона`, 'damage');
           }
-          
-          const isUnconscious = newHp === 0 && !p.isUnconscious;
+
+          const isUnconscious = newHp === 0 && !p.isUnconscious && p.characterType === 'player';
           if (isUnconscious) {
             addEvent(`${participant?.name} теряет сознание!`, 'damage');
             return { ...p, hpCurr: newHp, isUnconscious: true, deathSaves: { successes: 0, failures: 0 } };
           }
-          
+
+          const isDead = newHp === 0 && (p.characterType === 'npc' || p.characterType === 'boss');
+          if (isDead && participant) {
+            addEvent(`${participant.name} умирает!`, 'death');
+            return { ...p, hpCurr: newHp, isDead: true };
+          }
+
           return { ...p, hpCurr: newHp };
         }
         return p;
@@ -282,18 +372,22 @@ export default function CombatDashboard() {
     setParticipants((prev) =>
       prev.map((p) => {
         if (p.id === participantId) {
-          const newHp = Math.min(p.hpMax, p.hpCurr + amount);
+          if (p.characterType === 'boss' || p.hpMax === null) {
+            return p;
+          }
+
+          const newHp = Math.min(p.hpMax, (p.hpCurr || 0) + amount);
           const participant = participants.find((pp) => pp.id === participantId);
           if (participant) {
             addEvent(`${participant.name} восстанавливает ${amount} HP`, 'heal');
           }
-          
+
           const wasUnconscious = p.isUnconscious && newHp > 0;
           if (wasUnconscious) {
             addEvent(`${participant?.name} приходит в сознание!`, 'heal');
             return { ...p, hpCurr: newHp, isUnconscious: false, deathSaves: undefined };
           }
-          
+
           return { ...p, hpCurr: newHp };
         }
         return p;

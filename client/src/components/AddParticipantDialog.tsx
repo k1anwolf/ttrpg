@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Participant, Faction } from "@shared/schema";
+import type { Participant, CharacterType } from "@shared/schema";
 
 interface AddParticipantDialogProps {
   open: boolean;
@@ -22,19 +22,22 @@ interface AddParticipantDialogProps {
 export default function AddParticipantDialog({ open, onOpenChange, onAdd }: AddParticipantDialogProps) {
   const [name, setName] = useState("");
   const [initiative, setInitiative] = useState("10");
-  const [faction, setFaction] = useState<Faction>("player");
+  const [characterType, setCharacterType] = useState<CharacterType>("player");
   const [hp, setHp] = useState("50");
   const [mp, setMp] = useState("20");
   const [ac, setAc] = useState("15");
 
   const handleAdd = () => {
+    const isBoss = characterType === "boss";
     const newParticipant: Participant = {
       id: Date.now().toString(),
       name: name || "Новый персонаж",
       initiative: Number(initiative),
-      faction,
-      hpMax: Number(hp),
-      hpCurr: Number(hp),
+      characterType,
+      faction: characterType,
+      hpMax: isBoss ? null : Number(hp),
+      hpCurr: isBoss ? null : Number(hp),
+      damageTaken: 0,
       mpMax: Number(mp),
       mpCurr: Number(mp),
       ac: Number(ac),
@@ -51,6 +54,7 @@ export default function AddParticipantDialog({ open, onOpenChange, onAdd }: AddP
       abilities: [],
       spells: [],
       statuses: [],
+      equipment: [],
       isDead: false,
       isUnconscious: false,
     };
@@ -58,7 +62,7 @@ export default function AddParticipantDialog({ open, onOpenChange, onAdd }: AddP
     onAdd(newParticipant);
     setName("");
     setInitiative("10");
-    setFaction("player");
+    setCharacterType("player");
     setHp("50");
     setMp("20");
     setAc("15");
@@ -100,9 +104,9 @@ export default function AddParticipantDialog({ open, onOpenChange, onAdd }: AddP
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="faction">Фракция</Label>
-              <Select value={faction} onValueChange={(v) => setFaction(v as Faction)}>
-                <SelectTrigger id="faction" data-testid="select-participant-faction">
+              <Label htmlFor="character-type">Тип персонажа</Label>
+              <Select value={characterType} onValueChange={(v) => setCharacterType(v as CharacterType)}>
+                <SelectTrigger id="character-type" data-testid="select-participant-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -115,16 +119,18 @@ export default function AddParticipantDialog({ open, onOpenChange, onAdd }: AddP
           </div>
 
           <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="hp">HP</Label>
-              <Input
-                id="hp"
-                type="number"
-                value={hp}
-                onChange={(e) => setHp(e.target.value)}
-                data-testid="input-participant-hp"
-              />
-            </div>
+            {characterType !== "boss" && (
+              <div className="space-y-2">
+                <Label htmlFor="hp">HP</Label>
+                <Input
+                  id="hp"
+                  type="number"
+                  value={hp}
+                  onChange={(e) => setHp(e.target.value)}
+                  data-testid="input-participant-hp"
+                />
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="mp">MP</Label>

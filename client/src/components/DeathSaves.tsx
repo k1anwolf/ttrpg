@@ -5,18 +5,28 @@ import type { DeathSaves as DeathSavesType } from "@shared/schema";
 interface DeathSavesProps {
   deathSaves: DeathSavesType;
   onUpdate?: (deathSaves: DeathSavesType) => void;
+  onResurrect?: () => void;
+  onDeath?: () => void;
 }
 
-export default function DeathSaves({ deathSaves, onUpdate }: DeathSavesProps) {
+export default function DeathSaves({ deathSaves, onUpdate, onResurrect, onDeath }: DeathSavesProps) {
   const addSuccess = () => {
     if (deathSaves.successes < 3 && onUpdate) {
-      onUpdate({ ...deathSaves, successes: deathSaves.successes + 1 });
+      const newSuccesses = deathSaves.successes + 1;
+      onUpdate({ ...deathSaves, successes: newSuccesses });
+      if (newSuccesses === 3 && onResurrect) {
+        onResurrect();
+      }
     }
   };
 
   const addFailure = () => {
     if (deathSaves.failures < 3 && onUpdate) {
-      onUpdate({ ...deathSaves, failures: deathSaves.failures + 1 });
+      const newFailures = deathSaves.failures + 1;
+      onUpdate({ ...deathSaves, failures: newFailures });
+      if (newFailures === 3 && onDeath) {
+        onDeath();
+      }
     }
   };
 

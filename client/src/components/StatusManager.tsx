@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Plus, Trash2, Edit } from "lucide-react";
-import type { Status } from "@shared/schema";
+import type { Status, DurationType } from "@shared/schema";
 
 interface StatusManagerProps {
   open: boolean;
@@ -37,7 +37,7 @@ export default function StatusManager({
   const [editingStatus, setEditingStatus] = useState<Status | null>(null);
   const [name, setName] = useState("");
   const [duration, setDuration] = useState("1");
-  const [durationType, setDurationType] = useState<"rounds" | "turns">("rounds");
+  const [durationType, setDurationType] = useState<DurationType>("rounds");
   const [description, setDescription] = useState("");
 
   const handleEdit = (status: Status) => {
@@ -58,6 +58,7 @@ export default function StatusManager({
       duration: Number(duration),
       durationType,
       description,
+      source: editingStatus?.source || "manual",
     };
 
     if (editingStatus) {
@@ -118,7 +119,7 @@ export default function StatusManager({
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{status.name}</span>
                             <span className="text-sm text-muted-foreground">
-                              ({status.duration} {status.durationType === "rounds" ? "раунда" : "хода"})
+                              ({status.durationType === "until_removed" ? "до снятия" : `${status.duration} ${status.durationType === "rounds" ? "раунда" : "хода"}`})
                             </span>
                           </div>
                           {status.description && (
@@ -180,13 +181,14 @@ export default function StatusManager({
 
                 <div className="space-y-2">
                   <Label htmlFor="status-duration-type">Тип</Label>
-                  <Select value={durationType} onValueChange={(v) => setDurationType(v as "rounds" | "turns")}>
+                  <Select value={durationType} onValueChange={(v) => setDurationType(v as DurationType)}>
                     <SelectTrigger id="status-duration-type" data-testid="select-status-duration-type">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="rounds">Раунды</SelectItem>
                       <SelectItem value="turns">Ходы</SelectItem>
+                      <SelectItem value="until_removed">До снятия</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

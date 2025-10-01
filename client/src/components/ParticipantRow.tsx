@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Sword, Wand2, Scroll, ChevronDown, ChevronUp, Plus, Edit, Zap } from "lucide-react";
+import { Trash2, Sword, Wand2, Scroll, ChevronDown, ChevronUp, Plus, Edit, Zap, Shield, Skull, HeartPulse, Settings } from "lucide-react";
 import type { Participant, Action } from "@shared/schema";
 import HPBar from "./HPBar";
 import MPBar from "./MPBar";
@@ -11,6 +11,8 @@ import DeathSaves from "./DeathSaves";
 import ActionEditor from "./ActionEditor";
 import ApplyActionDialog from "./ApplyActionDialog";
 import StatusManager from "./StatusManager";
+import EquipmentManager from "./EquipmentManager";
+import ManualEditDialog from "./ManualEditDialog";
 
 interface ParticipantRowProps {
   participant: Participant;
@@ -41,14 +43,36 @@ export default function ParticipantRow({
   const [showApplyAction, setShowApplyAction] = useState(false);
   const [applyingAction, setApplyingAction] = useState<Action | null>(null);
   const [showStatusManager, setShowStatusManager] = useState(false);
+  const [showEquipmentManager, setShowEquipmentManager] = useState(false);
+  const [showManualEdit, setShowManualEdit] = useState(false);
 
   const getFactionColor = () => {
-    switch (participant.faction) {
+    switch (participant.characterType) {
       case "player": return "border-l-faction-player";
       case "npc": return "border-l-faction-npc";
       case "boss": return "border-l-faction-boss";
       default: return "";
     }
+  };
+
+  const handleKill = () => {
+    onUpdate({ ...participant, isDead: true, isUnconscious: false, deathSaves: undefined });
+  };
+
+  const handleResurrect = () => {
+    if (participant.characterType === "boss") {
+      onUpdate({ ...participant, isDead: false, damageTaken: 0 });
+    } else {
+      onUpdate({ ...participant, isDead: false, isUnconscious: false, hpCurr: 1, deathSaves: undefined });
+    }
+  };
+
+  const handleDeathSaveResurrect = () => {
+    onUpdate({ ...participant, isUnconscious: false, hpCurr: 1, deathSaves: undefined });
+  };
+
+  const handleDeathSaveDeath = () => {
+    onUpdate({ ...participant, isDead: true, isUnconscious: false, deathSaves: undefined });
   };
 
   const handleAddAction = (type: "attack" | "ability" | "spell") => {
@@ -134,10 +158,11 @@ export default function ParticipantRow({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <HPBar 
-                  current={participant.hpCurr} 
+                <HPBar
+                  current={participant.hpCurr}
                   max={participant.hpMax}
-                  isBoss={participant.faction === 'boss'}
+                  damageTaken={participant.damageTaken}
+                  characterType={participant.characterType}
                 />
               </div>
               <div>
@@ -145,10 +170,19 @@ export default function ParticipantRow({
               </div>
             </div>
 
-            {participant.isUnconscious && participant.deathSaves && (
+            {participant.isDead && (
+              <Badge variant="destructive" className="w-full justify-center">
+                <Skull className="h-3 w-3 mr-1" />
+                Мертв
+              </Badge>
+            )}
+
+            {participant.isUnconscious && participant.deathSaves && participant.characterType === "player" && (
               <DeathSaves
                 deathSaves={participant.deathSaves}
                 onUpdate={(ds) => onUpdate({ ...participant, deathSaves: ds })}
+                onResurrect={handleDeathSaveResurrect}
+                onDeath={handleDeathSaveDeath}
               />
             )}
 
@@ -182,16 +216,59 @@ export default function ParticipantRow({
             <Button
               variant="outline"
               size="icon"
+              onClick={() => setShowManualEdit(true)}
+              data-testid={`button-manual-edit-${participant.id}`}
+              title="Редактировать"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => setShowStatusManager(true)}
               data-testid={`button-manage-statuses-${participant.id}`}
+              title="Статусы"
             >
               <Zap className="h-4 w-4" />
             </Button>
+            {(participant.characterType === "player" || participant.characterType === "npc") && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setShowEquipmentManager(true)}
+                data-testid={`button-equipment-${participant.id}`}
+                title="Снаряжение"
+              >
+                <Shield className="h-4 w-4" />
+              </Button>
+            )}
+            {participant.isDead ? (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleResurrect}
+                data-testid={`button-resurrect-${participant.id}`}
+                title="Воскресить"
+              >
+                <HeartPulse className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                variant="destructive"
+                size="icon"
+                onClick={handleKill}
+                data-testid={`button-kill-${participant.id}`}
+                title="Убить"
+              >
+                <Skull className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               variant="destructive"
               size="icon"
               onClick={onDelete}
               data-testid={`button-delete-${participant.id}`}
+              title="Удалить"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -443,6 +520,22 @@ export default function ParticipantRow({
             statuses: participant.statuses.filter((s) => s.id !== statusId),
           });
         }}
+      />
+
+      <EquipmentManager
+        open={showEquipmentManager}
+        onOpenChange={setShowEquipmentManager}
+        equipment={participant.equipment || []}
+        onUpdate={(equipment) => {
+          onUpdate({ ...participant, equipment });
+        }}
+      />
+
+      <ManualEditDialog
+        open={showManualEdit}
+        onOpenChange={setShowManualEdit}
+        participant={participant}
+        onUpdate={onUpdate}
       />
     </>
   );

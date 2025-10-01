@@ -1,7 +1,10 @@
 import { z } from "zod";
 
-export const factionSchema = z.enum(["player", "npc", "boss"]);
-export type Faction = z.infer<typeof factionSchema>;
+export const characterTypeSchema = z.enum(["player", "npc", "boss"]);
+export type CharacterType = z.infer<typeof characterTypeSchema>;
+
+export const factionSchema = characterTypeSchema;
+export type Faction = CharacterType;
 
 export const characteristicsSchema = z.object({
   strength: z.number().default(10),
@@ -13,12 +16,16 @@ export const characteristicsSchema = z.object({
 });
 export type Characteristics = z.infer<typeof characteristicsSchema>;
 
+export const durationTypeSchema = z.enum(["rounds", "turns", "until_removed"]);
+export type DurationType = z.infer<typeof durationTypeSchema>;
+
 export const statusSchema = z.object({
   id: z.string(),
   name: z.string(),
   duration: z.number(),
-  durationType: z.enum(["rounds", "turns"]),
+  durationType: durationTypeSchema,
   description: z.string().optional(),
+  source: z.string().default("manual"),
 });
 export type Status = z.infer<typeof statusSchema>;
 
@@ -40,7 +47,7 @@ export const effectSchema = z.object({
   statusId: z.string().optional(),
   statusName: z.string().optional(),
   statusDuration: z.number().optional(),
-  statusDurationType: z.enum(["rounds", "turns"]).optional(),
+  statusDurationType: durationTypeSchema.optional(),
   statusDescription: z.string().optional(),
 });
 export type Effect = z.infer<typeof effectSchema>;
@@ -53,8 +60,30 @@ export const actionSchema = z.object({
   currentCooldown: z.number().default(0),
   description: z.string().optional(),
   effects: z.array(effectSchema).default([]),
+  targetCount: z.number().default(1),
+  canRemoveStatus: z.boolean().default(false),
+  statusToRemove: z.string().optional(),
 });
 export type Action = z.infer<typeof actionSchema>;
+
+export const hitResultSchema = z.enum(["success", "failure", "critical_success", "critical_failure"]);
+export type HitResult = z.infer<typeof hitResultSchema>;
+
+export const actionTargetSchema = z.object({
+  targetId: z.string(),
+  hitResult: hitResultSchema,
+});
+export type ActionTarget = z.infer<typeof actionTargetSchema>;
+
+export const equipmentSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  slot: z.string(),
+  description: z.string().optional(),
+  statBonuses: z.record(z.number()).default({}),
+  isEquipped: z.boolean().default(true),
+});
+export type Equipment = z.infer<typeof equipmentSchema>;
 
 export const deathSavesSchema = z.object({
   successes: z.number().min(0).max(3).default(0),
@@ -66,9 +95,11 @@ export const participantSchema = z.object({
   id: z.string(),
   name: z.string(),
   initiative: z.number(),
+  characterType: characterTypeSchema,
   faction: factionSchema,
-  hpMax: z.number(),
-  hpCurr: z.number(),
+  hpMax: z.number().nullable(),
+  hpCurr: z.number().nullable(),
+  damageTaken: z.number().default(0),
   mpMax: z.number().default(0),
   mpCurr: z.number().default(0),
   ac: z.number().default(10),
@@ -78,6 +109,7 @@ export const participantSchema = z.object({
   abilities: z.array(actionSchema).default([]),
   spells: z.array(actionSchema).default([]),
   statuses: z.array(statusSchema).default([]),
+  equipment: z.array(equipmentSchema).default([]),
   deathSaves: deathSavesSchema.optional(),
   isDead: z.boolean().default(false),
   isUnconscious: z.boolean().default(false),
